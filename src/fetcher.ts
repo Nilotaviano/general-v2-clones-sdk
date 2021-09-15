@@ -1,13 +1,12 @@
 import { Contract } from '@ethersproject/contracts'
 import { getNetwork } from '@ethersproject/networks'
 import { BaseProvider, getDefaultProvider } from '@ethersproject/providers'
-import { TokenAmount } from './entities/fractions/tokenAmount'
-import { Pair } from './entities/pair'
 import IUniswapV2Pair from '@uniswap/v2-core/build/IUniswapV2Pair.json'
-import IUniswapV2Factory from '@uniswap/v2-core/build/UniswapV2Factory.json'
 import invariant from 'tiny-invariant'
 import ERC20 from './abis/ERC20.json'
-import { ChainId, INIT_CODE_HASH_CACHE } from './constants'
+import { ChainId } from './constants'
+import { TokenAmount } from './entities/fractions/tokenAmount'
+import { Pair } from './entities/pair'
 import { Token } from './entities/token'
 
 let TOKEN_DECIMALS_CACHE: { [chainId: number]: { [address: string]: number } } = {
@@ -23,7 +22,7 @@ export abstract class Fetcher {
   /**
    * Cannot be constructed.
    */
-  private constructor() {}
+  private constructor() { }
 
   /**
    * Fetch information for a given token on the given chain, using the given ethers provider.
@@ -44,15 +43,15 @@ export abstract class Fetcher {
       typeof TOKEN_DECIMALS_CACHE?.[chainId]?.[address] === 'number'
         ? TOKEN_DECIMALS_CACHE[chainId][address]
         : await new Contract(address, ERC20, provider).decimals().then((decimals: number): number => {
-            TOKEN_DECIMALS_CACHE = {
-              ...TOKEN_DECIMALS_CACHE,
-              [chainId]: {
-                ...TOKEN_DECIMALS_CACHE?.[chainId],
-                [address]: decimals
-              }
+          TOKEN_DECIMALS_CACHE = {
+            ...TOKEN_DECIMALS_CACHE,
+            [chainId]: {
+              ...TOKEN_DECIMALS_CACHE?.[chainId],
+              [address]: decimals
             }
-            return decimals
-          })
+          }
+          return decimals
+        })
     return new Token(chainId, address, parsedDecimals, symbol, name)
   }
 
@@ -66,17 +65,14 @@ export abstract class Fetcher {
     tokenA: Token,
     tokenB: Token,
     provider: BaseProvider,
-    factoryAddress: string
+    factoryAddress: string,
+    initCodeHash: string
   ): Promise<Pair> {
     invariant(tokenA.chainId === tokenB.chainId, 'CHAIN_ID')
-    
-    if(INIT_CODE_HASH_CACHE[factoryAddress] === undefined) {
-      INIT_CODE_HASH_CACHE[factoryAddress] = await new Contract(factoryAddress, IUniswapV2Factory.abi).INIT_CODE_PAIR_HASH()
-    }
 
-    const address = await Pair.getAddress(tokenA, tokenB, factoryAddress, INIT_CODE_HASH_CACHE[factoryAddress])
+    const address = await Pair.getAddress(tokenA, tokenB, factoryAddress, initCodeHash)
     const [reserves0, reserves1] = await new Contract(address, IUniswapV2Pair.abi, provider).getReserves()
     const balances = tokenA.sortsBefore(tokenB) ? [reserves0, reserves1] : [reserves1, reserves0]
-    return new Pair(new TokenAmount(tokenA, balances[0]), new TokenAmount(tokenB, balances[1]), factoryAddress, INIT_CODE_HASH_CACHE[factoryAddress])
+    return new Pair(new TokenAmount(tokenA, balances[0]), new TokenAmount(tokenB, balances[1]), factoryAddress, initCodeHash)
   }
 }

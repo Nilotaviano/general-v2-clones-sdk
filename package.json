@@ -1,18 +1,17 @@
 {
-  "name": "@uniswap/sdk",
+  "name": "@nilotaviano/general-v2-clones-sdk",
   "license": "MIT",
   "version": "3.0.2",
-  "description": "🛠 An SDK for building applications on top of Uniswap.",
+  "description": "🛠 An SDK for building applications on top of any Uniswap-V2 clone.",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
   "files": [
     "dist"
   ],
-  "repository": "https://github.com/Uniswap/uniswap-sdk.git",
-  "keywords": [
-    "uniswap",
-    "ethereum"
-  ],
+  "repository": {
+    "type": "git",
+    "url": "git+git@github.com:Nilotaviano/general-v2-clones-sdk.git"
+  },
   "module": "dist/sdk.esm.js",
   "scripts": {
     "lint": "tsdx lint src test",
