@@ -1,7 +1,7 @@
 {
   "name": "@nilotaviano/uniswap-v2-clones-sdk",
   "license": "MIT",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "🛠 An SDK for building applications on top of any Uniswap-V2 clone.",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -21,7 +21,7 @@
     "prepublishOnly": "tsdx build"
   },
   "dependencies": {
-    "ethers": "5.1.0",
+    "ethers": "5.4.1",
     "@uniswap/v2-core": "^1.0.0",
     "big.js": "^5.2.2",
     "decimal.js-light": "^2.5.0",
@@ -29,6 +29,9 @@
     "tiny-invariant": "^1.1.0",
     "tiny-warning": "^1.0.3",
     "toformat": "^2.0.0"
+  },
+  "peerDependencies": {
+    "chai": "1.x"
   },
   "devDependencies": {
     "@types/big.js": "^4.0.5",
