@@ -1,16 +1,17 @@
 import { Contract } from '@ethersproject/contracts'
 import { getNetwork } from '@ethersproject/networks'
-import { getDefaultProvider } from '@ethersproject/providers'
+import { BaseProvider, getDefaultProvider } from '@ethersproject/providers'
 import { TokenAmount } from './entities/fractions/tokenAmount'
 import { Pair } from './entities/pair'
 import IUniswapV2Pair from '@uniswap/v2-core/build/IUniswapV2Pair.json'
+import IUniswapV2Factory from '@uniswap/v2-core/build/UniswapV2Factory.json'
 import invariant from 'tiny-invariant'
 import ERC20 from './abis/ERC20.json'
-import { ChainId } from './constants'
+import { ChainId, INIT_CODE_HASH_CACHE } from './constants'
 import { Token } from './entities/token'
 
 let TOKEN_DECIMALS_CACHE: { [chainId: number]: { [address: string]: number } } = {
-  [ChainId.MAINNET]: {
+  [ChainId.ETHEREUM_MAINNET]: {
     '0xE0B7927c4aF23765Cb51314A0E0521A9645F0E2A': 9 // DGD
   }
 }
@@ -64,12 +65,18 @@ export abstract class Fetcher {
   public static async fetchPairData(
     tokenA: Token,
     tokenB: Token,
-    provider = getDefaultProvider(getNetwork(tokenA.chainId))
+    provider: BaseProvider,
+    factoryAddress: string
   ): Promise<Pair> {
     invariant(tokenA.chainId === tokenB.chainId, 'CHAIN_ID')
-    const address = Pair.getAddress(tokenA, tokenB)
+    
+    if(INIT_CODE_HASH_CACHE[factoryAddress] === undefined) {
+      INIT_CODE_HASH_CACHE[factoryAddress] = await new Contract(factoryAddress, IUniswapV2Factory.abi).INIT_CODE_PAIR_HASH()
+    }
+
+    const address = await Pair.getAddress(tokenA, tokenB, factoryAddress, INIT_CODE_HASH_CACHE[factoryAddress])
     const [reserves0, reserves1] = await new Contract(address, IUniswapV2Pair.abi, provider).getReserves()
     const balances = tokenA.sortsBefore(tokenB) ? [reserves0, reserves1] : [reserves1, reserves0]
-    return new Pair(new TokenAmount(tokenA, balances[0]), new TokenAmount(tokenB, balances[1]))
+    return new Pair(new TokenAmount(tokenA, balances[0]), new TokenAmount(tokenB, balances[1]), factoryAddress, INIT_CODE_HASH_CACHE[factoryAddress])
   }
 }
