@@ -1,7 +1,7 @@
 import * as ethers from "ethers"
 import IUniswapV2Pair from '@uniswap/v2-core/build/IUniswapV2Pair.json'
+import IUniswapV2ERC20 from '@uniswap/v2-core/build/IUniswapV2ERC20.json'
 import invariant from 'tiny-invariant'
-import ERC20 from './abis/ERC20.json'
 import { ChainId } from './constants'
 import { TokenAmount } from './entities/fractions/tokenAmount'
 import { Pair } from './entities/pair'
@@ -40,7 +40,7 @@ export abstract class Fetcher {
     const parsedDecimals =
       typeof TOKEN_DECIMALS_CACHE?.[chainId]?.[address] === 'number'
         ? TOKEN_DECIMALS_CACHE[chainId][address]
-        : await new ethers.Contract(address, ERC20, provider).decimals().then((decimals: number): number => {
+        : await new ethers.Contract(address, IUniswapV2ERC20.abi, provider).decimals().then((decimals: number): number => {
           TOKEN_DECIMALS_CACHE = {
             ...TOKEN_DECIMALS_CACHE,
             [chainId]: {
